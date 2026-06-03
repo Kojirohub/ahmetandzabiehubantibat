@@ -1,0 +1,204 @@
+----- LEAKED BY CRYPTIC SOURCES https://discord.gg/9bPMNdVfs
+---- shared at fpsl and script by casual (fpsl owner) 
+
+print("[Envy AutoBat]")
+print("[Envy AutoBat Authenticating 100%]")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+-- State
+local isActive = false
+local antiBatConnection = nil
+local infiniteJumpConnection = nil
+
+-- Anti Bat Logic
+local function startAntiBat()
+    local character = LocalPlayer.Character
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    if antiBatConnection then antiBatConnection:Disconnect() end
+    antiBatConnection = RunService.Heartbeat:Connect(function()
+        if not rootPart or not rootPart.Parent then return end
+        local originalVelocity = rootPart.Velocity
+        rootPart.Velocity = Vector3.new(1000, rootPart.Velocity.Y, 1000)
+        RunService.RenderStepped:Wait()
+        rootPart.Velocity = originalVelocity
+    end)
+end
+
+local function stopAntiBat()
+    if antiBatConnection then
+        antiBatConnection:Disconnect()
+        antiBatConnection = nil
+    end
+end
+
+-- Infinite Jump Logic
+local function startInfiniteJump()
+    if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
+    infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
+        local character = LocalPlayer.Character
+        if not character then return end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Dead then
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end)
+end
+
+local function stopInfiniteJump()
+    if infiniteJumpConnection then
+        infiniteJumpConnection:Disconnect()
+        infiniteJumpConnection = nil
+    end
+end
+
+-- Toggle All
+local function startAll()
+    startAntiBat()
+    startInfiniteJump()
+end
+
+local function stopAll()
+    stopAntiBat()
+    stopInfiniteJump()
+end
+
+-- GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "OR_ANTIBAT"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 58, 0, 58)
+mainFrame.Position = UDim2.new(0.5, -29, 1, -85)
+mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 13)
+mainCorner.Parent = mainFrame
+
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(60, 60, 60)
+mainStroke.Thickness = 1.2
+mainStroke.Transparency = 0.5
+mainStroke.Parent = mainFrame
+
+-- Watermark Container
+local watermarkLabel = Instance.new("TextLabel")
+watermarkLabel.Size = UDim2.new(0, 150, 0, 20)
+-- Positioned slightly above the main frame
+watermarkLabel.Position = UDim2.new(0.5, -75, 1, -115) 
+watermarkLabel.BackgroundTransparency = 1
+watermarkLabel.Text = "ahmet and zabie hub"
+watermarkLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+watermarkLabel.Font = Enum.Font.GothamSemibold
+watermarkLabel.TextSize = 12
+-- Adding a slight shadow for readability
+watermarkLabel.TextStrokeTransparency = 0.5
+watermarkLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+watermarkLabel.Parent = screenGui
+
+
+-- Label
+local antiLabel = Instance.new("TextLabel")
+antiLabel.Size = UDim2.new(1, 0, 1, 0)
+antiLabel.Position = UDim2.new(0, 0, 0, 0)
+antiLabel.BackgroundTransparency = 1
+antiLabel.Text = "ANTI\nBAT"
+antiLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+antiLabel.Font = Enum.Font.GothamBold
+antiLabel.TextSize = 13
+antiLabel.TextXAlignment = Enum.TextXAlignment.Center
+antiLabel.TextYAlignment = Enum.TextYAlignment.Center
+antiLabel.LineHeight = 1.2
+antiLabel.Parent = mainFrame
+
+-- Click Button
+local clickButton = Instance.new("TextButton")
+clickButton.Size = UDim2.new(1, 0, 1, 0)
+clickButton.Position = UDim2.new(0, 0, 0, 0)
+clickButton.BackgroundTransparency = 1
+clickButton.Text = ""
+clickButton.Parent = mainFrame
+
+-- Visuals
+local function updateVisuals()
+    if isActive then
+        mainFrame.BackgroundColor3 = Color3.fromRGB(240, 240, 240)
+        antiLabel.TextColor3 = Color3.fromRGB(20, 20, 20)
+        mainStroke.Color = Color3.fromRGB(200, 200, 200)
+        mainStroke.Transparency = 0
+        mainStroke.Thickness = 1.5
+    else
+        mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        antiLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        mainStroke.Color = Color3.fromRGB(60, 60, 60)
+        mainStroke.Transparency = 0.5
+        mainStroke.Thickness = 1.2
+    end
+end
+
+-- Toggle
+clickButton.MouseButton1Click:Connect(function()
+    isActive = not isActive
+    if isActive then
+        startAll()
+    else
+        stopAll()
+    end
+    updateVisuals()
+end)
+
+-- Respawn
+LocalPlayer.CharacterAdded:Connect(function()
+    if isActive then
+        stopAll()
+        task.wait(0.3)
+        startAll()
+    end
+end)
+
+-- Draggable
+local dragging = false
+local dragStartPos = nil
+local frameStartPos = nil
+
+clickButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStartPos = input.Position
+        frameStartPos = mainFrame.Position
+    end
+end)
+
+clickButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+                     input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStartPos
+        mainFrame.Position = UDim2.new(
+            frameStartPos.X.Scale,
+            frameStartPos.X.Offset + delta.X,
+            frameStartPos.Y.Scale,
+            frameStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+updateVisuals()

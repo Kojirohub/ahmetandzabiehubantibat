@@ -94,19 +94,21 @@ mainStroke.Parent = mainFrame
 
 -- Watermark Container
 local watermarkLabel = Instance.new("TextLabel")
+watermarkLabel.Name = "Watermark"
 watermarkLabel.Size = UDim2.new(0, 150, 0, 20)
--- Positioned slightly above the main frame
-watermarkLabel.Position = UDim2.new(0.5, -75, 1, -115) 
+-- Change Position to Top-Left so it's always visible
+watermarkLabel.Position = UDim2.new(0, 10, 0, 10) 
 watermarkLabel.BackgroundTransparency = 1
 watermarkLabel.Text = "ahmet and zabie hub"
 watermarkLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 watermarkLabel.Font = Enum.Font.GothamSemibold
 watermarkLabel.TextSize = 12
--- Adding a slight shadow for readability
+-- Ensure it stays on top
+watermarkLabel.ZIndex = 10 
+-- Adding a slight shadow
 watermarkLabel.TextStrokeTransparency = 0.5
 watermarkLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 watermarkLabel.Parent = screenGui
-
 
 -- Label
 local antiLabel = Instance.new("TextLabel")

@@ -1,6 +1,3 @@
------ LEAKED BY CRYPTIC SOURCES https://discord.gg/9bPMNdVfs
----- shared at fpsl and script by casual (fpsl owner) 
-
 print("[Envy AutoBat]")
 print("[Envy AutoBat Authenticating 100%]")
 local Players = game:GetService("Players")
@@ -36,15 +33,18 @@ local function stopAntiBat()
     end
 end
 
--- Infinite Jump Logic
+-- Infinite Jump Logic (fixed - no fling)
 local function startInfiniteJump()
     if infiniteJumpConnection then infiniteJumpConnection:Disconnect() end
     infiniteJumpConnection = UserInputService.JumpRequest:Connect(function()
         local character = LocalPlayer.Character
         if not character then return end
         local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Dead then
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoid and rootPart and humanoid:GetState() ~= Enum.HumanoidStateType.Dead then
+            local savedVel = rootPart.Velocity
             humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            rootPart.Velocity = Vector3.new(savedVel.X, math.max(savedVel.Y, 30), savedVel.Z)
         end
     end)
 end
@@ -76,8 +76,8 @@ screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Main Frame
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 58, 0, 58)
-mainFrame.Position = UDim2.new(0.5, -29, 1, -85)
+mainFrame.Size = UDim2.new(0, 90, 0, 90)
+mainFrame.Position = UDim2.new(0.5, -45, 1, -110)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
@@ -100,7 +100,7 @@ antiLabel.BackgroundTransparency = 1
 antiLabel.Text = "ANTI\nBAT"
 antiLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 antiLabel.Font = Enum.Font.GothamBold
-antiLabel.TextSize = 13
+antiLabel.TextSize = 16
 antiLabel.TextXAlignment = Enum.TextXAlignment.Center
 antiLabel.TextYAlignment = Enum.TextYAlignment.Center
 antiLabel.LineHeight = 1.2
@@ -131,8 +131,16 @@ local function updateVisuals()
     end
 end
 
+-- Draggable variables declared early
+local dragging = false
+local dragStartPos = nil
+local frameStartPos = nil
+local dragThreshold = 6
+local hasDragged = false
+
 -- Toggle
 clickButton.MouseButton1Click:Connect(function()
+    if hasDragged then return end
     isActive = not isActive
     if isActive then
         startAll()
@@ -151,15 +159,11 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
--- Draggable
-local dragging = false
-local dragStartPos = nil
-local frameStartPos = nil
-
 clickButton.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or
        input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
+        hasDragged = false
         dragStartPos = input.Position
         frameStartPos = mainFrame.Position
     end
@@ -176,12 +180,17 @@ UserInputService.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
                      input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStartPos
-        mainFrame.Position = UDim2.new(
-            frameStartPos.X.Scale,
-            frameStartPos.X.Offset + delta.X,
-            frameStartPos.Y.Scale,
-            frameStartPos.Y.Offset + delta.Y
-        )
+        if delta.Magnitude > dragThreshold then
+            hasDragged = true
+        end
+        if hasDragged then
+            mainFrame.Position = UDim2.new(
+                frameStartPos.X.Scale,
+                frameStartPos.X.Offset + delta.X,
+                frameStartPos.Y.Scale,
+                frameStartPos.Y.Offset + delta.Y
+            )
+        end
     end
 end)
 

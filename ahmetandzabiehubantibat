@@ -295,6 +295,7 @@ end
 
 local infJumpActive=false
 local infJumpConn=nil
+local fallDmgConn=nil
 
 local function startInfJump()
     local char=LocalPlayer.Character
@@ -302,11 +303,21 @@ local function startInfJump()
     local hum=char:FindFirstChildOfClass("Humanoid")or char:WaitForChild("Humanoid",5)
     local root=char:FindFirstChild("HumanoidRootPart")or char:WaitForChild("HumanoidRootPart",5)
     if not hum or not root then return end
+
+    local oldJumpPower=hum.JumpPower
+    hum.JumpPower=50
+
+    -- block fall damage by resetting state to landed safely
+    if fallDmgConn then fallDmgConn:Disconnect() end
+    fallDmgConn=hum.StateChanged:Connect(function(old,new)
+        if new==Enum.HumanoidStateType.Landed then
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end
+    end)
+
     if infJumpConn then infJumpConn:Disconnect() end
     infJumpConn=UserInputService.JumpRequest:Connect(function()
         if hum and hum.Parent and hum.Health>0 then
-            hum.JumpPower=50
-            root.Velocity=Vector3.new(root.Velocity.X,hum.JumpPower,root.Velocity.Z)
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end)
@@ -314,6 +325,12 @@ end
 
 local function stopInfJump()
     if infJumpConn then infJumpConn:Disconnect() infJumpConn=nil end
+    if fallDmgConn then fallDmgConn:Disconnect() fallDmgConn=nil end
+    local char=LocalPlayer.Character
+    if char then
+        local hum=char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.JumpPower=50 end
+    end
 end
 
 LocalPlayer.CharacterAdded:Connect(function(char)

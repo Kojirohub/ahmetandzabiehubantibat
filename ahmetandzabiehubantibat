@@ -4,11 +4,24 @@ local CoreGui=game:GetService("CoreGui")
 local RunService=game:GetService("RunService")
 local UserInputService=game:GetService("UserInputService")
 local TweenService=game:GetService("TweenService")
-local parentGui=(gethui and gethui())or CoreGui or LocalPlayer:WaitForChild("PlayerGui")
+
+local parentGui
+if gethui then
+    parentGui=gethui()
+elseif syn and syn.protect_gui then
+    local sg=Instance.new("ScreenGui")
+    syn.protect_gui(sg)
+    sg.Parent=CoreGui
+    parentGui=sg.Parent
+else
+    parentGui=LocalPlayer:WaitForChild("PlayerGui")
+end
 
 local ScreenGui_1=Instance.new("ScreenGui")
 ScreenGui_1.Name="IrishAntiBatUI"
 ScreenGui_1.ResetOnSpawn=false
+ScreenGui_1.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+ScreenGui_1.DisplayOrder=999
 ScreenGui_1.Parent=parentGui
 
 local Frame_1=Instance.new("Frame")
@@ -287,14 +300,14 @@ local function startInfJump()
     local char=LocalPlayer.Character
     if not char then return end
     local hum=char:FindFirstChildOfClass("Humanoid")or char:WaitForChild("Humanoid",5)
-    if not hum then return end
+    local root=char:FindFirstChild("HumanoidRootPart")or char:WaitForChild("HumanoidRootPart",5)
+    if not hum or not root then return end
     if infJumpConn then infJumpConn:Disconnect() end
     infJumpConn=UserInputService.JumpRequest:Connect(function()
         if hum and hum.Parent and hum.Health>0 then
-            hum.JumpPower=hum.JumpPower
+            hum.JumpPower=50
+            root.Velocity=Vector3.new(root.Velocity.X,hum.JumpPower,root.Velocity.Z)
             hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            task.wait(0.1)
-            hum:ChangeState(Enum.HumanoidStateType.Freefall)
         end
     end)
 end
